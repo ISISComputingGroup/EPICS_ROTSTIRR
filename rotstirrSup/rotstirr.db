@@ -1,3 +1,8 @@
+# $(P) - ROTSTIRR IOC
+# $(Q) - TTIPLP IOC
+# $(RMX) - RPM maximum operating range
+# $(VMX) - Voltage trip point
+
 record(bo, "$(P)SIM")
 {
     field(SCAN, "Passive")
@@ -16,4 +21,112 @@ record(bo, "$(P)DISABLE")
     field(OMSL, "supervisory")
     field(ZNAM, "COMMS ENABLED")
     field(ONAM, "COMMS DISABLED")
+}
+
+record(ao, "$(P)RPM:SP")
+{
+    field(DESC, "RPM setpoint")
+    field(SCAN, "Passive")
+    field(EGU, "rpm")
+    field(PREC, "5")
+    field(DRVL, "0")
+    field(DRVH, "$(RMX)")
+    field(OUT, "$(P)CONVT:VOLT.Y PP")
+    field(FLNK, "$(P)ROTSET")
+    field(UDFS, "NO_ALARM")
+    info(INTEREST, "HIGH")
+}
+
+record(cvt, "$(P)CONVT:VOLT")
+{
+    field(DESC, "Converts desired RPM to voltage")
+    field(SCAN, "Passive")
+    field(PREC, "5")
+    field(XSLO, 1)
+    field(YSLO, 1)
+    field(DRVL, "0")
+    field(DRVH, "$(VMX)")
+    field(METH, "1D TABLE INVERTED")
+    field(SPEC, "Default.txt")
+    field(TDIR, "rotating_stirrer_rack")
+    field(BDIR, "C:/Instrument/Settings/config/common")
+}
+
+record(seq, "$(P)ROTSET")
+{
+    field(DESC, "Sends desired setpoint and trip values")
+    field(SCAN, "Passive")
+    field(LNK1, "$(Q)VOLTAGE:SP")
+    field(LNK2, "$(Q)CURRENT:SP")
+    field(LNK3, "$(Q)OUTPUT:SP")
+    field(LNK4, "$(Q)OVERVOLT:SP")
+    field(LNK5, "$(Q)OVERCURR:SP")
+    field(DOL1, "$(P)CONVT:VOLT.VAL")
+    field(DO2, "1")
+    field(DO3, "1")
+    field(DO4, "$(VMX)")
+    field(DO5, "1.1")
+}
+
+record(seq, "$(P)ROTSTOP")
+{
+    field(DESC, "Stop rotations button")
+    field(SCAN, "Passive")
+    field(LNK1, "$(Q)VOLTAGE:SP PP")
+    field(LNK2, "$(Q)CURRENT:SP PP")
+    field(LNK3, "$(Q)OUTPUT:SP PP")
+    field(LNK4, "$(P)RPM:SP.VAL PP")
+    field(DO1, "0")
+    field(DO2, "1")
+    field(DO3, "1")
+    field(DO4, "0")
+    info(INTEREST, "HIGH")
+    info(alarm, "ROTSTIRR>")
+}
+
+record(cvt, "$(P)CONVT:RPM")
+{
+    field(DESC, "Converts current TTIPLP voltage to RPM")
+    field(SCAN, "1 second")
+    field(PREC, "5")
+    field(INPX, "$(Q)VOLTAGE")
+    field(XSLO, 1)
+    field(YSLO, 1)
+    field(METH, "1D TABLE")
+    field(SPEC, "Default.txt")
+    field(TDIR, "rotating_stirrer_rack")
+    field(BDIR, "C:/Instrument/Settings/config/common")
+    field(FLNK, "$(P)CALC:RPM")
+    info(INTEREST, "MEDIUM")
+}
+
+# This is needed to account for cvt uncertainty on edge-case scenario (0V - 0RPM, 0V - 4.999RPM)
+# this comes from operational range of stirrer rack (in this example, minimum of 5RPM)
+record(calc, "$(P)CALC:RPM")
+{
+    field(DESC, "Adjust current RPM read back")
+    field(SCAN, "Passive")
+    field(PREC, "5")
+    field(INPA, "$(P)CONVT:RPM.VAL")
+    field(INPB, "$(Q)VOLTAGE")
+    field(CALC, "B=0?0:A")
+    field(FLNK, "$(P)ROTS:TOTAL")
+}
+
+record(calcout, "$(P)ROTS:TOTAL")
+{
+    field(DESC, "Calculates total rotation")
+    field(SCAN, "Passive")
+    field(INPA, "$(P)ROTS:TOTAL:RBV")
+    field(INPB, "$(P)CALC:RPM.VAL")
+    field(CALC, "A+(B/60)")
+    field(OUT, "$(P)ROTS:TOTAL:RBV")
+}
+
+record(ao, "$(P)ROTS:TOTAL:RBV")
+{
+    field(DESC, "Total rotations since starting the IOC")
+    field(SCAN, "Passive")
+    field(EGU, "")
+    info(INTEREST, "MEDIUM")
 }
