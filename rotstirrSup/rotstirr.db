@@ -120,7 +120,7 @@ record(calcout, "$(P)ROTS:TOTAL")
     field(INPA, "$(P)ROTS:TOTAL:RBV")
     field(INPB, "$(P)CALC:RPM.VAL")
     field(CALC, "A+(B/60)")
-    field(OUT, "$(P)ROTS:TOTAL:RBV")
+    field(OUT, "$(P)ROTS:TOTAL:RBV PP")
 }
 
 record(ao, "$(P)ROTS:TOTAL:RBV")
