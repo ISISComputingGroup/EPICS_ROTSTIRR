@@ -5,7 +5,6 @@ from lewis.utils.command_builder import CmdBuilder
 
 @has_log
 class RotstirrStreamInterface(StreamInterface):
-
     def __init__(self):
         super(RotstirrStreamInterface, self).__init__()
         # Commands that we expect via serial during normal operation
