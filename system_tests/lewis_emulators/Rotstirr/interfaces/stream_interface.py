@@ -1,12 +1,10 @@
-from lewis.adapters.stream import StreamInterface, Cmd
-from lewis.utils.command_builder import CmdBuilder
+from lewis.adapters.stream import StreamInterface
 from lewis.core.logging import has_log
-from lewis.utils.replies import conditional_reply
+from lewis.utils.command_builder import CmdBuilder
 
 
 @has_log
 class RotstirrStreamInterface(StreamInterface):
-
     def __init__(self):
         super(RotstirrStreamInterface, self).__init__()
         # Commands that we expect via serial during normal operation
